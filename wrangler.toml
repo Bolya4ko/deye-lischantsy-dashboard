@@ -1,0 +1,22 @@
+name = "deye-lischantsy-dashboard"
+main = "worker/site-entry.mjs"
+compatibility_date = "2025-01-01"
+account_id = "8ea72c7fb9963b2269f70ff4126b8d78"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+preview_urls = false
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html", "**/*.css", "**/*.svg", "**/*.json"]
+fallthrough = true
+
+[[rules]]
+type = "Data"
+globs = ["**/*.png"]
+fallthrough = true
+
+[vars]
+DEYE_STATION_ID = "62276988"
+DEYE_STATION_NAME = "Ліщанці"
+CACHE_SECONDS = "180"

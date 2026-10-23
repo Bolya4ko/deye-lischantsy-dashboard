@@ -1,0 +1,17 @@
+{
+  "name": "deye-lischantsy-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deye Cloud dashboard for the Lishchantsi station",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "worker:dev": "wrangler dev",
+    "worker:local": "node tools/local-worker.mjs",
+    "worker:deploy": "wrangler deploy",
+    "build": "node tools/build-pages.mjs"
+  }
+}
