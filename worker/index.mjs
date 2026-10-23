@@ -38,9 +38,8 @@ export function allowedStations(env) {
 }
 
 // State lives while the Worker isolate is warm: token, history and the last answer are reused per station.
-export function createHandler({ clientFactory = (settings, options) => new DeyeClient(settings, undefined, options), now = Date.now, fetcher = fetch } = {}) {
+export function createHandler({ clientFactory = (settings, options) => new DeyeClient(settings, undefined, options), now = Date.now } = {}) {
   const entries = new Map();
-  let outageCache = null;
 
   function headers(env, extra = {}) {
     return {
@@ -80,33 +79,6 @@ export function createHandler({ clientFactory = (settings, options) => new DeyeC
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headers(env) });
     if (request.method !== 'GET') return send(env, 405, { error: 'Дозволено лише GET.' });
     if (url.pathname === '/' || url.pathname === '/health') return send(env, 200, { ok: true });
-    if (url.pathname === '/api/outage-schedule') {
-      const ttl = 3 * 60 * 60 * 1000;
-      if (!url.searchParams.has('refresh') && outageCache && now() - outageCache.at < ttl) return send(env, 200, outageCache.data, { 'X-Cache': 'HIT' });
-      try {
-        const response = await fetcher('https://mapasvitla.com.ua/kyivska-oblast');
-        if (!response.ok) throw new Error('Schedule page unavailable');
-        const page = await response.text();
-        const section = page.match(/aria-label=\"Черга 5\.2: без світла ([^\"]*)\"/);
-        const intervals = section && [...section[1].matchAll(/(\d{2}):(\d{2})[–-](\d{2}):(\d{2})/g)].map(match => match.slice(1).map(Number));
-        if (!intervals?.length) throw new Error('Schedule unavailable');
-        const today = Array(24).fill(0);
-        for (const [fromHour, fromMinute, toHour, toMinute] of intervals) {
-          const from = fromHour * 60 + fromMinute, to = toHour * 60 + toMinute || 1440;
-          for (let hour = 0; hour < 24; hour++) {
-            const start = hour * 60, end = start + 60, overlap = Math.max(0, Math.min(end, to) - Math.max(start, from));
-            if (overlap === 60) today[hour] = 1;
-            else if (overlap > 0 && today[hour] !== 1) today[hour] = 2;
-          }
-        }
-        const data = { queue: '5.2', updated: new Date().toISOString(), today, todayStatus: 'ScheduleApplies' };
-        outageCache = { at: now(), data };
-        return send(env, 200, data, { 'X-Cache': 'MISS' });
-      } catch {
-        if (outageCache) return send(env, 200, outageCache.data, { 'X-Cache': 'STALE' });
-        return send(env, 502, { error: 'Графік тимчасово недоступний.' });
-      }
-    }
     if (url.pathname !== '/api/status') return send(env, 404, { error: 'Не знайдено.' });
 
     let entry;

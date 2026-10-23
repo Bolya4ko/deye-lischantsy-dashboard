@@ -5,7 +5,6 @@ import page from '../public/index.html';
 import script from './static-app.mjs';
 import styles from '../public/styles.css';
 import icon from '../public/favicon.svg';
-import schedule from '../public/outage-schedule.json';
 import stepOne from '../public/iphone-step-1.png';
 import stepTwo from '../public/iphone-step-2.png';
 import stepThree from '../public/iphone-step-3.png';
@@ -16,7 +15,6 @@ const assets = new Map([
   ['/app.js', [script, 'text/javascript; charset=utf-8']],
   ['/styles.css', [styles, 'text/css; charset=utf-8']],
   ['/favicon.svg', [icon, 'image/svg+xml']],
-  ['/outage-schedule.json', [schedule, 'application/json; charset=utf-8']],
   ['/iphone-step-1.png', [stepOne, 'image/png']],
   ['/iphone-step-2.png', [stepTwo, 'image/png']],
   ['/iphone-step-3.png', [stepThree, 'image/png']]

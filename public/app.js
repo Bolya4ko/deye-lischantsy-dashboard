@@ -276,38 +276,3 @@ document.addEventListener('visibilitychange', () => {
 const installHelp = $('install-help');
 $('open-install-help').addEventListener('click', () => installHelp.showModal());
 $('close-install-help').addEventListener('click', () => installHelp.close());
-
-// Outage schedule: queue 5.2 of DTEK Kyiv regional grids. Refresh every 3 hours.
-const outageEndpoint = new URL('/api/outage-schedule', document.querySelector('meta[name="dashboard-api"]')?.content?.trim() || location.origin).toString();function kyivTime(value) { return new Intl.DateTimeFormat('uk-UA', { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit' }).format(value); }
-function renderOutage(row) {
-  const chart = $('outage-chart');
-  if (!row || !Array.isArray(row.today) || row.today.length !== 24) throw new Error('Графік для групи 5.2 поки не опубліковано.');
-  chart.replaceChildren(...row.today.map((state, hour) => {
-    const kind = state === 1 ? 'off' : state === 2 || state === 3 ? 'partial' : 'on';
-    const title = state === 1 ? 'Світла немає' : state === 2 || state === 3 ? 'Часткове відключення' : 'Світло є';
-    const item = document.createElement('div'); item.className = 'outage-hour ' + kind; item.title = String(hour).padStart(2, '0') + ':00 — ' + title;
-    item.innerHTML = '<b aria-hidden="true"></b><span>' + String(hour).padStart(2, '0') + '</span>';
-    return item;
-  }));
-  $('outage-updated').textContent = row.updated ? 'Оновлено: ' + kyivTime(new Date(row.updated)) : 'Опубліковано';
-  $('outage-note').textContent = row.todayStatus === 'ScheduleApplies' ? 'Графік ДТЕК Київські регіональні електромережі на сьогодні. Аварійні відключення можуть не відображатися.' : 'Графік для сьогодні ще очікується від оператора.';
-}
-async function refreshOutage(force = false) {
-  const button = $('outage-refresh');
-  if (button) { button.disabled = true; button.classList.add('is-loading'); }
-  try {
-    const source = new URL(outageEndpoint);
-    if (force) source.searchParams.set('refresh', '1');
-    const response = await fetch(source, { cache: 'no-store', signal: AbortSignal.timeout(20000) });
-    if (!response.ok) throw new Error();
-    renderOutage(await response.json());
-  } catch {
-    $('outage-updated').textContent = 'Немає свіжого графіка';
-    $('outage-note').textContent = 'Не вдалося завантажити розклад. Спробуйте оновити пізніше.';
-  } finally {
-    if (button) { button.disabled = false; button.classList.remove('is-loading'); }
-  }
-}
-$('outage-refresh')?.addEventListener('click', () => refreshOutage(true));
-refreshOutage();
-setInterval(refreshOutage, 10800000);
